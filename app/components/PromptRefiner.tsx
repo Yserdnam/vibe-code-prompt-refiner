@@ -248,6 +248,14 @@ function OutputPanel({
   emptyText: string;
 }) {
   const [isPreviewing, setIsPreviewing] = useState(false);
+  const [copiedOutput, setCopiedOutput] = useState(false);
+
+  const copyOutput = async () => {
+    if (!value) return;
+    await navigator.clipboard.writeText(value);
+    setCopiedOutput(true);
+    setTimeout(() => setCopiedOutput(false), 2000);
+  };
 
   return (
     <div className="flex min-h-[270px] flex-col rounded-lg border border-zinc-200 bg-zinc-950 text-zinc-100">
@@ -258,6 +266,14 @@ function OutputPanel({
         </h2>
         <div className="flex items-center gap-3">
           {value && <p className="text-xs text-zinc-400">{value.length} chars</p>}
+          <button
+            onClick={copyOutput}
+            disabled={!value || isLoading}
+            className="inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-white/10 px-3 text-xs font-medium text-zinc-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:text-zinc-600"
+          >
+            {copiedOutput ? <Check size={14} /> : <Copy size={14} />}
+            {copiedOutput ? 'Copied' : 'Copy'}
+          </button>
           <button
             onClick={() => setIsPreviewing((current) => !current)}
             disabled={!value || isLoading}

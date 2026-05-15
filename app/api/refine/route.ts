@@ -1,4 +1,4 @@
-\import { google } from '@ai-sdk/google';
+import { google } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { APICallError, generateText, type LanguageModel } from 'ai';
 import { NextRequest } from 'next/server';

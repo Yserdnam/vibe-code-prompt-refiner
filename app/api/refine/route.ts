@@ -2,7 +2,7 @@ import { google } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { APICallError, generateText, type LanguageModel } from 'ai';
 import { NextRequest } from 'next/server';
-import { SYSTEM_PROMPT } from '@/app/lib/constants';
+import { FUNCTIONALITY_PROMPT, IMPLEMENTATION_PROMPT } from '@/app/lib/constants';
 
 type ModelProvider = {
   name: string;
@@ -63,8 +63,14 @@ function shouldFallback(error: unknown) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { idea } = await req.json();
+    const { idea, functionality, mode = 'features' } = await req.json();
     if (!idea?.trim()) return Response.json({ error: 'Idea is required' }, { status: 400 });
+    if (mode !== 'features' && mode !== 'implementation') {
+      return Response.json({ error: 'Invalid refinement mode' }, { status: 400 });
+    }
+    if (mode === 'implementation' && !functionality?.trim()) {
+      return Response.json({ error: 'Functionality list is required' }, { status: 400 });
+    }
 
     const providers = getConfiguredProviders();
     if (providers.length === 0) {
@@ -77,14 +83,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const prompt = `User Idea:\n${idea}\n\nRefine this into a complete AI development prompt.`;
+    const system = mode === 'implementation' ? IMPLEMENTATION_PROMPT : FUNCTIONALITY_PROMPT;
+    const prompt =
+      mode === 'implementation'
+        ? `User Idea:\n${idea}\n\nProposed Functionality:\n${functionality}\n\nSuggest the implementation approach.`
+        : `User Idea:\n${idea}\n\nPropose the functionality for this product.`;
     let lastError: unknown;
 
     for (const provider of providers) {
       try {
         const result = await generateText({
           model: provider.model,
-          system: SYSTEM_PROMPT,
+          system,
           prompt,
           temperature: 0.3,
           maxRetries: 0,

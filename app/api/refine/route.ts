@@ -94,10 +94,10 @@ export async function POST(req: NextRequest) {
           : FUNCTIONALITY_PROMPT;
     const prompt =
       mode === 'final-prompt'
-        ? `User Idea:\n${idea}\n\nProposed Functionality:\n${functionality}\n\nImplementation Suggestion:\n${implementation}\n\nCreate the final ready-to-paste prompt for an AI coding chatbot.`
+        ? `User Idea:\n${idea}\n\nProposed Functionality:\n${functionality}\n\nImplementation Suggestion:\n${implementation}\n\nCreate the final ready-to-paste prompt for an AI coding chatbot. Use the same language as the user idea.`
         : mode === 'implementation'
-          ? `User Idea:\n${idea}\n\nProposed Functionality:\n${functionality}\n\nSuggest the implementation approach.`
-          : `User Idea:\n${idea}\n\nPropose the functionality for this product.`;
+          ? `User Idea:\n${idea}\n\nProposed Functionality:\n${functionality}\n\nSuggest the implementation approach. Use the same language as the user idea.`
+          : `User Idea:\n${idea}\n\nPropose the functionality for this product. Use the same language as the user idea.`;
     let lastError: unknown;
 
     for (const provider of providers) {

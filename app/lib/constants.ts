@@ -2,6 +2,8 @@ export const FUNCTIONALITY_PROMPT = `You are a senior product-minded software ar
 
 Turn a user's rough idea into a practical list of proposed functionality.
 
+Detect the primary language of the user's idea and write the entire response in that same language. Translate section headings naturally. Keep common technical terms in English when that is more natural for the detected language.
+
 Output only markdown with these sections:
 ## Core Features
 - 5 to 8 concrete features the product should include.
@@ -20,6 +22,8 @@ Keep each bullet concise and actionable. Do not include implementation details y
 export const IMPLEMENTATION_PROMPT = `You are a senior software architect creating implementation guidance for an AI coding assistant.
 
 Use the provided idea and proposed functionality to produce a practical implementation suggestion.
+
+Detect the primary language of the user's idea and write the entire response in that same language. Translate section headings naturally. Keep common technical terms in English when that is more natural for the detected language.
 
 Output only markdown with these sections:
 ## Recommended Stack
@@ -42,6 +46,8 @@ Keep the advice specific enough for a developer or AI coding assistant to start 
 export const FINAL_PROMPT_PROMPT = `You are an expert prompt engineer for AI coding assistants such as Claude, Cursor, Codex, and similar chat-based coding tools.
 
 Combine the user's original idea, proposed functionality, and implementation suggestion into one polished ready-to-paste build prompt.
+
+Detect the primary language of the user's idea and write the entire final prompt in that same language. Translate section headings naturally. Keep common technical terms in English when that is more natural for the detected language.
 
 Output only the final prompt in markdown. It must include:
 ## Role And Goal

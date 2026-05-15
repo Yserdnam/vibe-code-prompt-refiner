@@ -5,9 +5,12 @@ import { NextRequest } from 'next/server';
 import { FINAL_PROMPT_PROMPT, FUNCTIONALITY_PROMPT, IMPLEMENTATION_PROMPT } from '@/app/lib/constants';
 
 type ModelProvider = {
+  id: ProviderChoice;
   name: string;
   model: LanguageModel;
 };
+
+type ProviderChoice = 'auto' | 'gemini' | 'groq' | 'openrouter';
 
 const groq = createOpenAI({
   name: 'groq',
@@ -25,26 +28,35 @@ const openrouter = createOpenAI({
   },
 });
 
-function getConfiguredProviders(): ModelProvider[] {
+function getConfiguredProviders(providerChoice: ProviderChoice): ModelProvider[] {
   const providers: Array<ModelProvider & { apiKey?: string }> = [
     {
+      id: 'gemini',
       name: 'gemini-flash-lite',
       apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
       model: google('gemini-2.5-flash-lite'),
     },
     {
+      id: 'groq',
       name: 'groq-llama-3.3-70b',
       apiKey: process.env.GROQ_API_KEY,
       model: groq.chat('llama-3.3-70b-versatile'),
     },
     {
+      id: 'openrouter',
       name: 'openrouter-free',
       apiKey: process.env.OPENROUTER_API_KEY,
       model: openrouter.chat('openrouter/free'),
     },
   ];
 
-  return providers.filter(({ apiKey }) => Boolean(apiKey?.trim()));
+  const configuredProviders = providers.filter(({ apiKey }) => Boolean(apiKey?.trim()));
+
+  if (providerChoice === 'auto') {
+    return configuredProviders;
+  }
+
+  return configuredProviders.filter(({ id }) => id === providerChoice);
 }
 
 function shouldFallback(error: unknown) {
@@ -63,10 +75,18 @@ function shouldFallback(error: unknown) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { idea, functionality, implementation, mode = 'features' } = await req.json();
+    const { idea, functionality, implementation, mode = 'features', providerChoice = 'auto' } = await req.json();
     if (!idea?.trim()) return Response.json({ error: 'Idea is required' }, { status: 400 });
     if (mode !== 'features' && mode !== 'implementation' && mode !== 'final-prompt') {
       return Response.json({ error: 'Invalid refinement mode' }, { status: 400 });
+    }
+    if (
+      providerChoice !== 'auto' &&
+      providerChoice !== 'gemini' &&
+      providerChoice !== 'groq' &&
+      providerChoice !== 'openrouter'
+    ) {
+      return Response.json({ error: 'Invalid provider choice' }, { status: 400 });
     }
     if ((mode === 'implementation' || mode === 'final-prompt') && !functionality?.trim()) {
       return Response.json({ error: 'Functionality list is required' }, { status: 400 });
@@ -75,12 +95,14 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: 'Implementation suggestion is required' }, { status: 400 });
     }
 
-    const providers = getConfiguredProviders();
+    const providers = getConfiguredProviders(providerChoice);
     if (providers.length === 0) {
       return Response.json(
         {
           error:
-            'No AI provider key configured. Add GOOGLE_GENERATIVE_AI_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY.',
+            providerChoice === 'auto'
+              ? 'No AI provider key configured. Add GOOGLE_GENERATIVE_AI_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY.'
+              : 'The selected AI provider key is not configured.',
         },
         { status: 500 }
       );

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 type RefineMode = 'features' | 'implementation' | 'final-prompt';
+type ProviderChoice = 'auto' | 'gemini' | 'groq' | 'openrouter';
 
 export default function PromptRefiner() {
   const [idea, setIdea] = useState('');
@@ -24,12 +25,21 @@ export default function PromptRefiner() {
   const [implementation, setImplementation] = useState('');
   const [finalPrompt, setFinalPrompt] = useState('');
   const [provider, setProvider] = useState('');
+  const [providerChoice, setProviderChoice] = useState<ProviderChoice>('auto');
   const [error, setError] = useState('');
   const [loadingMode, setLoadingMode] = useState<RefineMode | null>(null);
   const [copied, setCopied] = useState(false);
 
   const isLoading = loadingMode !== null;
   const copyValue = finalPrompt || implementation || functionality;
+  const providerChoiceLabel =
+    providerChoice === 'auto'
+      ? 'Gemini, then fallback'
+      : providerChoice === 'gemini'
+        ? 'Gemini only'
+        : providerChoice === 'groq'
+          ? 'Groq only'
+          : 'OpenRouter only';
 
   const readTextStream = async (response: Response, onChunk: (value: string) => void) => {
     const reader = response.body?.getReader();
@@ -73,7 +83,7 @@ export default function PromptRefiner() {
       const response = await fetch('/api/refine', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idea, functionality, implementation, mode }),
+        body: JSON.stringify({ idea, functionality, implementation, mode, providerChoice }),
       });
 
       if (!response.ok) throw new Error('Failed to refine prompt');
@@ -120,7 +130,7 @@ export default function PromptRefiner() {
             </h1>
           </div>
           <div className="text-sm text-zinc-600">
-            {provider ? `Model: ${provider}` : 'Gemini, Groq, OpenRouter fallback'}
+            {provider ? `Model: ${provider}` : providerChoiceLabel}
           </div>
         </header>
 
@@ -143,6 +153,24 @@ export default function PromptRefiner() {
             />
 
             <div className="space-y-3 border-t border-zinc-200 p-3">
+              <div>
+                <label htmlFor="provider-choice" className="mb-2 block text-sm font-medium text-zinc-800">
+                  LLM
+                </label>
+                <select
+                  id="provider-choice"
+                  value={providerChoice}
+                  onChange={(event) => setProviderChoice(event.target.value as ProviderChoice)}
+                  disabled={isLoading}
+                  className="h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-teal-600 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
+                >
+                  <option value="auto">Gemini + fallback</option>
+                  <option value="gemini">Gemini Flash-Lite</option>
+                  <option value="groq">Groq Llama 3.3 70B</option>
+                  <option value="openrouter">OpenRouter Free</option>
+                </select>
+              </div>
+
               <button
                 onClick={() => refine('features')}
                 disabled={isLoading || !idea.trim()}

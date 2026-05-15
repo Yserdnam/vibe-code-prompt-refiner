@@ -6,9 +6,11 @@ import {
   AlertCircle,
   Check,
   Copy,
+  Eye,
   Lightbulb,
   ListChecks,
   Loader2,
+  Pencil,
   RotateCcw,
   Wrench,
 } from 'lucide-react';
@@ -179,6 +181,7 @@ export default function PromptRefiner() {
               icon={<ListChecks size={17} />}
               title="Proposed Functionality"
               value={functionality}
+              onChange={setFunctionality}
               isLoading={loadingMode === 'features'}
               emptyText="Generate functionality from your idea first."
             />
@@ -187,6 +190,7 @@ export default function PromptRefiner() {
               icon={<Wrench size={17} />}
               title="Implementation Suggestion"
               value={implementation}
+              onChange={setImplementation}
               isLoading={loadingMode === 'implementation'}
               emptyText="Use the proposed functionality to generate an implementation suggestion."
             />
@@ -201,23 +205,37 @@ function OutputPanel({
   icon,
   title,
   value,
+  onChange,
   isLoading,
   emptyText,
 }: {
   icon: ReactNode;
   title: string;
   value: string;
+  onChange: (value: string) => void;
   isLoading: boolean;
   emptyText: string;
 }) {
+  const [isPreviewing, setIsPreviewing] = useState(false);
+
   return (
     <div className="flex min-h-[270px] flex-col rounded-lg border border-zinc-200 bg-zinc-950 text-zinc-100">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
         <h2 className="flex items-center gap-2 text-sm font-medium">
           {icon}
           {title}
         </h2>
-        {value && <p className="text-xs text-zinc-400">{value.length} chars</p>}
+        <div className="flex items-center gap-3">
+          {value && <p className="text-xs text-zinc-400">{value.length} chars</p>}
+          <button
+            onClick={() => setIsPreviewing((current) => !current)}
+            disabled={!value || isLoading}
+            className="inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-white/10 px-3 text-xs font-medium text-zinc-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:text-zinc-600"
+          >
+            {isPreviewing ? <Pencil size={14} /> : <Eye size={14} />}
+            {isPreviewing ? 'Edit' : 'Preview MD'}
+          </button>
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto p-5">
@@ -234,11 +252,20 @@ function OutputPanel({
           </div>
         )}
 
-        {!isLoading && value && (
-          <div className="markdown-output text-sm leading-7 text-zinc-100">
-            <ReactMarkdown>{value}</ReactMarkdown>
-          </div>
-        )}
+        {!isLoading &&
+          value &&
+          (isPreviewing ? (
+            <div className="markdown-output min-h-72 overflow-auto rounded-lg border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-zinc-100">
+              <ReactMarkdown>{value}</ReactMarkdown>
+            </div>
+          ) : (
+            <textarea
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+              className="min-h-72 w-full resize-y rounded-lg border border-white/10 bg-white/[0.03] p-4 font-mono text-sm leading-7 text-zinc-100 outline-none transition focus:border-teal-400/60"
+              aria-label={`${title} markdown editor`}
+            />
+          ))}
       </div>
     </div>
   );

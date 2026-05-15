@@ -2,7 +2,7 @@ import { google } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { APICallError, generateText, type LanguageModel } from 'ai';
 import { NextRequest } from 'next/server';
-import { FUNCTIONALITY_PROMPT, IMPLEMENTATION_PROMPT } from '@/app/lib/constants';
+import { FINAL_PROMPT_PROMPT, FUNCTIONALITY_PROMPT, IMPLEMENTATION_PROMPT } from '@/app/lib/constants';
 
 type ModelProvider = {
   name: string;
@@ -63,13 +63,16 @@ function shouldFallback(error: unknown) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { idea, functionality, mode = 'features' } = await req.json();
+    const { idea, functionality, implementation, mode = 'features' } = await req.json();
     if (!idea?.trim()) return Response.json({ error: 'Idea is required' }, { status: 400 });
-    if (mode !== 'features' && mode !== 'implementation') {
+    if (mode !== 'features' && mode !== 'implementation' && mode !== 'final-prompt') {
       return Response.json({ error: 'Invalid refinement mode' }, { status: 400 });
     }
-    if (mode === 'implementation' && !functionality?.trim()) {
+    if ((mode === 'implementation' || mode === 'final-prompt') && !functionality?.trim()) {
       return Response.json({ error: 'Functionality list is required' }, { status: 400 });
+    }
+    if (mode === 'final-prompt' && !implementation?.trim()) {
+      return Response.json({ error: 'Implementation suggestion is required' }, { status: 400 });
     }
 
     const providers = getConfiguredProviders();
@@ -83,11 +86,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const system = mode === 'implementation' ? IMPLEMENTATION_PROMPT : FUNCTIONALITY_PROMPT;
+    const system =
+      mode === 'final-prompt'
+        ? FINAL_PROMPT_PROMPT
+        : mode === 'implementation'
+          ? IMPLEMENTATION_PROMPT
+          : FUNCTIONALITY_PROMPT;
     const prompt =
-      mode === 'implementation'
-        ? `User Idea:\n${idea}\n\nProposed Functionality:\n${functionality}\n\nSuggest the implementation approach.`
-        : `User Idea:\n${idea}\n\nPropose the functionality for this product.`;
+      mode === 'final-prompt'
+        ? `User Idea:\n${idea}\n\nProposed Functionality:\n${functionality}\n\nImplementation Suggestion:\n${implementation}\n\nCreate the final ready-to-paste prompt for an AI coding chatbot.`
+        : mode === 'implementation'
+          ? `User Idea:\n${idea}\n\nProposed Functionality:\n${functionality}\n\nSuggest the implementation approach.`
+          : `User Idea:\n${idea}\n\nPropose the functionality for this product.`;
     let lastError: unknown;
 
     for (const provider of providers) {

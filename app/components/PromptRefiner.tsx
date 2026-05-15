@@ -7,6 +7,7 @@ import {
   Check,
   Copy,
   Eye,
+  FileText,
   Lightbulb,
   ListChecks,
   Loader2,
@@ -15,19 +16,20 @@ import {
   Wrench,
 } from 'lucide-react';
 
-type RefineMode = 'features' | 'implementation';
+type RefineMode = 'features' | 'implementation' | 'final-prompt';
 
 export default function PromptRefiner() {
   const [idea, setIdea] = useState('');
   const [functionality, setFunctionality] = useState('');
   const [implementation, setImplementation] = useState('');
+  const [finalPrompt, setFinalPrompt] = useState('');
   const [provider, setProvider] = useState('');
   const [error, setError] = useState('');
   const [loadingMode, setLoadingMode] = useState<RefineMode | null>(null);
   const [copied, setCopied] = useState(false);
 
   const isLoading = loadingMode !== null;
-  const copyValue = implementation || functionality;
+  const copyValue = finalPrompt || implementation || functionality;
 
   const readTextStream = async (response: Response, onChunk: (value: string) => void) => {
     const reader = response.body?.getReader();
@@ -47,6 +49,7 @@ export default function PromptRefiner() {
   const refine = async (mode: RefineMode) => {
     if (!idea.trim() || isLoading) return;
     if (mode === 'implementation' && !functionality.trim()) return;
+    if (mode === 'final-prompt' && (!functionality.trim() || !implementation.trim())) return;
 
     setCopied(false);
     setError('');
@@ -56,21 +59,30 @@ export default function PromptRefiner() {
     if (mode === 'features') {
       setFunctionality('');
       setImplementation('');
+      setFinalPrompt('');
     } else {
-      setImplementation('');
+      if (mode === 'implementation') {
+        setImplementation('');
+        setFinalPrompt('');
+      } else {
+        setFinalPrompt('');
+      }
     }
 
     try {
       const response = await fetch('/api/refine', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idea, functionality, mode }),
+        body: JSON.stringify({ idea, functionality, implementation, mode }),
       });
 
       if (!response.ok) throw new Error('Failed to refine prompt');
       setProvider(response.headers.get('X-AI-Provider') ?? '');
 
-      await readTextStream(response, mode === 'features' ? setFunctionality : setImplementation);
+      await readTextStream(
+        response,
+        mode === 'features' ? setFunctionality : mode === 'implementation' ? setImplementation : setFinalPrompt
+      );
     } catch (error) {
       console.error('Error:', error);
       setError('Could not generate this step. Please check your provider keys or try again.');
@@ -90,6 +102,7 @@ export default function PromptRefiner() {
     setIdea('');
     setFunctionality('');
     setImplementation('');
+    setFinalPrompt('');
     setProvider('');
     setError('');
     setCopied(false);
@@ -148,6 +161,15 @@ export default function PromptRefiner() {
                 {loadingMode === 'implementation' ? 'Generating implementation' : 'Suggest implementation'}
               </button>
 
+              <button
+                onClick={() => refine('final-prompt')}
+                disabled={isLoading || !idea.trim() || !functionality.trim() || !implementation.trim()}
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-indigo-700 px-4 text-sm font-medium text-white transition hover:bg-indigo-800 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600"
+              >
+                {loadingMode === 'final-prompt' ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
+                {loadingMode === 'final-prompt' ? 'Generating final prompt' : 'Generate final prompt'}
+              </button>
+
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={copyToClipboard}
@@ -159,7 +181,7 @@ export default function PromptRefiner() {
                 </button>
                 <button
                   onClick={reset}
-                  disabled={isLoading || (!idea && !functionality && !implementation && !error)}
+                  disabled={isLoading || (!idea && !functionality && !implementation && !finalPrompt && !error)}
                   className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400"
                 >
                   <RotateCcw size={16} />
@@ -193,6 +215,15 @@ export default function PromptRefiner() {
               onChange={setImplementation}
               isLoading={loadingMode === 'implementation'}
               emptyText="Use the proposed functionality to generate an implementation suggestion."
+            />
+
+            <OutputPanel
+              icon={<FileText size={17} />}
+              title="Final Vibe Coding Prompt"
+              value={finalPrompt}
+              onChange={setFinalPrompt}
+              isLoading={loadingMode === 'final-prompt'}
+              emptyText="Combine functionality and implementation into a ready-to-paste coding prompt."
             />
           </div>
         </section>

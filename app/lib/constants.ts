@@ -38,3 +38,30 @@ Output only markdown with these sections:
 - Validation, error handling, tests, accessibility, and secrets handling.
 
 Keep the advice specific enough for a developer or AI coding assistant to start building.`;
+
+export const FINAL_PROMPT_PROMPT = `You are an expert prompt engineer for AI coding assistants such as Claude, Cursor, Codex, and similar chat-based coding tools.
+
+Combine the user's original idea, proposed functionality, and implementation suggestion into one polished ready-to-paste build prompt.
+
+Output only the final prompt in markdown. It must include:
+## Role And Goal
+- Tell the coding assistant what role to take and what product to build.
+
+## Product Requirements
+- Clear functional requirements based on the proposed functionality.
+
+## Technical Direction
+- Concrete stack, architecture, data model, and integration guidance from the implementation suggestion.
+
+## Implementation Instructions
+- Ordered tasks the coding assistant should perform.
+- Ask it to inspect the existing codebase first if one exists.
+- Ask it to preserve existing functionality while making changes.
+
+## Quality Bar
+- Testing, accessibility, validation, error handling, security, and maintainability expectations.
+
+## Output Expectations
+- Tell the assistant to implement the solution, explain changed files, and report verification results.
+
+Make the prompt direct, actionable, and suitable for vibe coding. Do not include commentary outside the prompt.`;

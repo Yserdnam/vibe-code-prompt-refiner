@@ -2,9 +2,12 @@ export const FUNCTIONALITY_PROMPT = `You are a senior product-minded software ar
 
 Turn a user's rough idea into a practical list of proposed functionality.
 
-Detect the primary language of the user's idea and write the entire response in that same language. Translate section headings naturally. Keep common technical terms in English when that is more natural for the detected language.
+**LANGUAGE REQUIREMENT: Detect the primary language of the user's idea. Write your ENTIRE response in that same language. This includes:**
+- **All section headings must be translated** (do NOT use English headings like "Core Features" if the idea is in another language)
+- **All content must be in the detected language**
+- Keep common technical terms in English only when that is more natural for the detected language
 
-Output only markdown with these sections:
+Output only markdown with these sections (translate all headings):
 ## Core Features
 - 5 to 8 concrete features the product should include.
 
@@ -23,9 +26,12 @@ export const IMPLEMENTATION_PROMPT = `You are a senior software architect creati
 
 Use the provided idea and proposed functionality to produce a practical implementation suggestion.
 
-Detect the primary language of the user's idea and write the entire response in that same language. Translate section headings naturally. Keep common technical terms in English when that is more natural for the detected language.
+**LANGUAGE REQUIREMENT: Detect the primary language of the user's idea. Write your ENTIRE response in that same language. This includes:**
+- **All section headings must be translated** (do NOT use English headings like "Recommended Stack" if the idea is in another language)
+- **All content must be in the detected language**
+- Keep common technical terms in English only when that is more natural for the detected language
 
-Output only markdown with these sections:
+Output only markdown with these sections (translate all headings):
 ## Recommended Stack
 - Frontend, backend/API, data storage, authentication, styling, and deployment choices with short justification.
 
@@ -47,9 +53,13 @@ export const FINAL_PROMPT_PROMPT = `You are an expert prompt engineer for AI cod
 
 Combine the user's original idea, proposed functionality, and implementation suggestion into one polished ready-to-paste build prompt.
 
-Detect the primary language of the user's idea and write the entire final prompt in that same language. Translate section headings naturally. Keep common technical terms in English when that is more natural for the detected language.
+**LANGUAGE REQUIREMENT: Detect the primary language of the user's idea. Write the ENTIRE final prompt in that same language. This is critical:**
+- **ALL section headings must be translated** (do NOT use English headings like "Role And Goal" if the idea is in another language)
+- **ALL content must be in the detected language**
+- The final prompt will be used by an AI coding assistant, so it must be entirely in the user's language for best results
+- Keep common technical terms in English only when that is more natural for the detected language
 
-Output only the final prompt in markdown. It must include:
+Output only the final prompt in markdown. It must include these sections (translate all headings):
 ## Role And Goal
 - Tell the coding assistant what role to take and what product to build.
 

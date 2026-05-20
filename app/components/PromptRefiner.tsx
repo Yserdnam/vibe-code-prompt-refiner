@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Download,
   FileText,
   Lightbulb,
   ListChecks,
@@ -408,12 +409,29 @@ function OutputCard({
 }: OutputSection & { isExpanded: boolean; onToggle: () => void }) {
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [copiedOutput, setCopiedOutput] = useState(false);
+  const [downloadedOutput, setDownloadedOutput] = useState(false);
 
   const copyOutput = async () => {
     if (!value) return;
     await navigator.clipboard.writeText(value);
     setCopiedOutput(true);
     setTimeout(() => setCopiedOutput(false), 2000);
+  };
+
+  const downloadOutput = () => {
+    if (!value) return;
+    const filename = id === 'functionality' ? 'functionality.md' : id === 'implementation' ? 'implementation.md' : 'final-prompt.md';
+    const blob = new Blob([value], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setDownloadedOutput(true);
+    setTimeout(() => setDownloadedOutput(false), 2000);
   };
 
   return (
@@ -470,6 +488,13 @@ function OutputCard({
                 >
                   {copiedOutput ? <Check size={14} /> : <Copy size={14} />}
                   {copiedOutput ? 'Copied' : 'Copy'}
+                </button>
+                <button
+                  onClick={downloadOutput}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-800"
+                >
+                  {downloadedOutput ? <Check size={14} /> : <Download size={14} />}
+                  {downloadedOutput ? 'Downloaded' : 'Download'}
                 </button>
                 <button
                   onClick={() => setIsPreviewing((current) => !current)}

@@ -116,10 +116,10 @@ export async function POST(req: NextRequest) {
           : FUNCTIONALITY_PROMPT;
     const prompt =
       mode === 'final-prompt'
-        ? `User Idea (detect language from this):\n${idea}\n\nProposed Functionality:\n${functionality}\n\nImplementation Suggestion:\n${implementation}\n\nCreate the final ready-to-paste prompt for an AI coding chatbot. IMPORTANT: Write the entire output in the same language as the user idea above. Translate all headings and content.`
+        ? `User Idea:\n${idea}\n\nProposed Functionality:\n${functionality}\n\nImplementation Suggestion:\n${implementation}\n\nCreate the final ready-to-paste prompt for an AI coding chatbot. Use the user's idea language exactly. If the idea is English, reply in English. Do not switch languages.`
         : mode === 'implementation'
-          ? `User Idea (detect language from this):\n${idea}\n\nProposed Functionality:\n${functionality}\n\nSuggest the implementation approach. IMPORTANT: Write the entire output in the same language as the user idea above. Translate all headings and content.`
-          : `User Idea (detect language from this):\n${idea}\n\nPropose the functionality for this product. IMPORTANT: Write the entire output in the same language as the user idea above. Translate all headings and content.`;
+          ? `User Idea:\n${idea}\n\nProposed Functionality:\n${functionality}\n\nSuggest the implementation approach. Use the user's idea language exactly. If the idea is English, reply in English. Do not switch languages.`
+          : `User Idea:\n${idea}\n\nPropose the functionality for this product. Use the user's idea language exactly. If the idea is English, reply in English. Do not switch languages.`;
     let lastError: unknown;
 
     for (const provider of providers) {
